@@ -22,7 +22,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.10.0"
-super-scad = "^0.7.0"
+super-scad = "^0.7.1"
 
 [tool.poetry.group.dev.dependencies]
 coverage = "^7.5.4"
