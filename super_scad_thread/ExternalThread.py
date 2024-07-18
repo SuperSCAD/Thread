@@ -26,7 +26,8 @@ class ExternalThread(Thread):
                  direction: ThreadDirection = ThreadDirection.RIGHT,
                  inner_radius: float | None = None,
                  inner_diameter: float | None = None,
-                 center: bool | None = None):
+                 center: bool | None = None,
+                 convexity: int = 2):
         """
         Object contructor.
 
@@ -36,6 +37,8 @@ class ExternalThread(Thread):
         :param bottom_thread_lead_creator: The object for creating a lead on the top of the thread.
         :param direction: The direction of the thread.
         :param center: Whether to center the thread along the z-axis.
+        :param convexity: The convexity of the thread. Normally 2 is enough, however, in some cases a higher value is
+                          required.
         """
         Thread.__init__(self, args=locals())
 

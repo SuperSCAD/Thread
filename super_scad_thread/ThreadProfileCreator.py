@@ -4,6 +4,8 @@ from typing import List, Tuple
 from super_scad.scad.Unit import Unit
 from super_scad.type.Point2 import Point2
 
+from super_scad_thread.ThreadAnatomy import ThreadAnatomy
+
 
 class ThreadProfileCreator(ABC):
     """
@@ -25,7 +27,8 @@ class ThreadProfileCreator(ABC):
         The pitch of the thread.
         """
 
-        self.__master_profile: List[Point2] | Tuple[Point2, ...] | None = None
+        self.__master_profile: List[Tuple[ThreadAnatomy, Point2]] | \
+                               Tuple[Tuple[ThreadAnatomy, Point2], ...] | None = None
         """
         The 2D master profile of the thread. I.e. all the 2D points of the profile for one pitch.
         """
@@ -78,7 +81,8 @@ class ThreadProfileCreator(ABC):
 
     # ------------------------------------------------------------------------------------------------------------------
     @abstractmethod
-    def create_master_profile(self) -> List[Point2]:
+    def create_master_profile(self) -> List[Tuple[ThreadAnatomy, Point2]] | \
+                                       Tuple[Tuple[ThreadAnatomy, Point2], ...]:
         """
         Returns the 2D master profile of the thread. I.e. all the 2D points of the profile for one pitch. The thread
         profile must start in the middel of the root.
@@ -86,25 +90,28 @@ class ThreadProfileCreator(ABC):
         raise NotImplementedError()
 
     # ------------------------------------------------------------------------------------------------------------------
-    def create_thread_profile(self, length: float) -> List[Point2] | Tuple[Point2, ...]:
+    def create_thread_profile(self, length: float) -> Tuple[List[ThreadAnatomy], List[Point2]]:
         """
         Returns the thread profile points.
         """
         if self.__master_profile is None:
             self.__master_profile = self.create_master_profile()
 
+        anatomy = []
         points = []
 
-        if self.__master_profile[0].y != 0.0:
-            points.append(Point2(self.__master_profile[0].x, -self.__pitch))
+        if self.__master_profile[0][1].y != 0.0:
+            anatomy.append(self.__master_profile[0][0])
+            points.append(Point2(self.__master_profile[0][1].x, -self.__pitch))
 
         for revolution in range(-1, int(length / self.__pitch) + 2):
             for j in range(0, len(self.__master_profile)):
-                x = self.__master_profile[j].x
-                y = self.__master_profile[j].y + revolution * self.__pitch
+                x = self.__master_profile[j][1].x
+                y = self.__master_profile[j][1].y + revolution * self.__pitch
                 if y <= (length + self.__pitch):
+                    anatomy.append(self.__master_profile[j][0])
                     points.append(Point2(x, y))
 
-        return points
+        return anatomy, points
 
 # ----------------------------------------------------------------------------------------------------------------------

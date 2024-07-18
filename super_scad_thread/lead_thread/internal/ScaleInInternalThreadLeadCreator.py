@@ -2,13 +2,13 @@ from typing import List
 
 from super_scad.type.Point2 import Point2
 
-from super_scad_thread.lead_thread.external.ExternalThreadLeadCreator import ExternalThreadLeadCreator
+from super_scad_thread.lead_thread.internal.InternalThreadLeadCreator import InternalThreadLeadCreator
 from super_scad_thread.ThreadAnatomy import ThreadAnatomy
 
 
-class ScaleInExternalThreadLeadCreator(ExternalThreadLeadCreator):
+class ScaleInInternalThreadLeadCreator(InternalThreadLeadCreator):
     """
-    Creates a lead on a 2D external thread profile.
+    Creates a lead on a 2D internal thread profile.
     """
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -16,7 +16,7 @@ class ScaleInExternalThreadLeadCreator(ExternalThreadLeadCreator):
                  pitch: float,
                  minor_diameter: float,
                  major_diameter: float,
-                 start_angle: float = 270.0):
+                 start_angle: float = 180.0):
         """
         Object constructor.
 
@@ -63,18 +63,29 @@ class ScaleInExternalThreadLeadCreator(ExternalThreadLeadCreator):
         It is guaranteed that 0.0 <= z < pitch.
         It is guaranteed that 0.0 <= angle < 360.0.
         """
+        index_first_root = None
+        index_second_root = None
+        prev = None
+        for index, point in enumerate(thread_profile):
+            if thread_anatomy[index] == ThreadAnatomy.AT_MAJOR and prev != ThreadAnatomy.AT_MAJOR:
+                index_first_root = index_second_root
+                index_second_root = index
+            prev = thread_anatomy[index]
+            if point.y > z + self.__pitch:
+                break
+
         for index, point in enumerate(thread_profile):
             if point.y < 0.0:
-                thread_profile[index] = Point2(self.__minor_diameter / 2.0, 0.0)
-            elif point.y <= z:
-                if angle >= self.__start_angle:
+                thread_profile[index] = Point2(self.__major_diameter / 2.0, 0.0)
+            elif index < index_second_root:
+                if angle >= self.__start_angle and index > index_first_root:
                     fraction = (angle - self.__start_angle) / (360.0 - self.__start_angle)
-                    d_max = self.__minor_diameter + (self.__major_diameter - self.__minor_diameter) * fraction
-                    x = min(d_max / 2.0, point.x)
+                    d_min = self.__major_diameter - (self.__major_diameter - self.__minor_diameter) * fraction
+                    x = max(d_min / 2.0, point.x)
                     y = point.y
                     thread_profile[index] = Point2(x, y)
                 else:
-                    x = self.__minor_diameter / 2.0
+                    x = self.__major_diameter / 2.0
                     y = point.y
                     thread_profile[index] = Point2(x, y)
             else:

@@ -14,6 +14,7 @@ from super_scad.type.Point3 import Point3
 from super_scad.util.Radius2Sides4n import Radius2Sides4n
 
 from super_scad_thread.lead_thread.ThreadLeadCreator import ThreadLeadCreator
+from super_scad_thread.ThreadAnatomy import ThreadAnatomy
 from super_scad_thread.ThreadDirection import ThreadDirection
 from super_scad_thread.ThreadProfileCreator import ThreadProfileCreator
 
@@ -102,6 +103,14 @@ class Thread(ScadWidget, ABC):
         return self._args['direction']
 
     # ------------------------------------------------------------------------------------------------------------------
+    @property
+    def convexity(self) -> int:
+        """
+        Returns the convexity of the thread.
+        """
+        return self._args['convexity']
+
+    # ------------------------------------------------------------------------------------------------------------------
     def _create_faces(self, thread_3d: List[List[Point3]]) -> List[List[Point3] | Tuple[Point3, ...]]:
         """
         Creates faces given a thread profile in 3D.
@@ -155,23 +164,25 @@ class Thread(ScadWidget, ABC):
 
     # ------------------------------------------------------------------------------------------------------------------
     def __thread_create_lead(self,
-                             thread_profile_2d: List[Point2],
+                             thread_profile: List[Point2],
+                             thread_anatomy: List[ThreadAnatomy],
                              z: float,
                              angle: float,
                              lead_creator: ThreadLeadCreator) -> List[Point2]:
         """
         Applies the tread lead transformation on the thread profile in 2D.
 
-        :param thread_profile_2d: The thread profile in 2D.
-        :param z: The translation in z-axis direction.
+        :param thread_profile: The thread profile in 2D.
+        :param thread_anatomy: The location of a points on the thread profile.
+        :param z: The current translation in z-axis direction.
         :param angle: The rotation in degrees.
         :param lead_creator: The thread lead creator.
         """
-        thread_profile_2d = lead_creator.create_lead(thread_profile_2d, z, angle)
+        thread_profile = lead_creator.create_lead(thread_profile, thread_anatomy, z, angle)
 
-        self.__thread_assert_lead(thread_profile_2d)
+        self.__thread_assert_lead(thread_profile)
 
-        return thread_profile_2d
+        return thread_profile
 
     # ------------------------------------------------------------------------------------------------------------------
     @staticmethod
@@ -230,7 +241,8 @@ class Thread(ScadWidget, ABC):
         context.set_unit_length_current(thread_profile_creator.unit_of_length)
 
         length = self.length
-        master_thread_profile_2d = thread_profile_creator.create_thread_profile(length)
+        master_thread_anatomy, master_thread_profile_2d = thread_profile_creator.create_thread_profile(length)
+        master_thread_anatomy_reversed = list(reversed(master_thread_anatomy))
         pitch = thread_profile_creator.pitch
 
         top_thread_lead_creator = self.top_thread_lead_creator
@@ -247,10 +259,15 @@ class Thread(ScadWidget, ABC):
             angle = i * 360.0 / sides
             thread_profile_2d = self.__thread_translate(master_thread_profile_2d, z)
             thread_profile_2d = self.__thread_move_point_to_zero(thread_profile_2d)
-            thread_profile_2d = self.__thread_create_lead(thread_profile_2d, z, angle, bottom_thread_lead_creator)
+            thread_profile_2d = self.__thread_create_lead(thread_profile_2d,
+                                                          master_thread_anatomy,
+                                                          z,
+                                                          angle,
+                                                          bottom_thread_lead_creator)
             thread_profile_2d = self.__thread_reverse(thread_profile_2d, length)
             thread_profile_2d = self.__thread_move_point_to_zero(thread_profile_2d)
             thread_profile_2d = self.__thread_create_lead(thread_profile_2d,
+                                                          master_thread_anatomy_reversed,
                                                           Angle.normalize(z_offset - z, pitch),
                                                           Angle.normalize(angle_offset - angle, 360.0),
                                                           top_thread_lead_creator)
@@ -259,7 +276,7 @@ class Thread(ScadWidget, ABC):
             thread_3d.append(thread_profile_3d)
 
         faces = self._create_faces(thread_3d)
-        polyhedron = Polyhedron(faces=faces, highlight_face=None, highlight_diameter=None, convexity=2)
+        polyhedron = Polyhedron(faces=faces, highlight_face=None, highlight_diameter=0.1, convexity=self.convexity)
 
         if self.direction == ThreadDirection.LEFT:
             polyhedron = Mirror3D(x=1.0, child=polyhedron)

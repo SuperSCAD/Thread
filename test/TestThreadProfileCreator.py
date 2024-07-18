@@ -1,8 +1,10 @@
 import math
-from typing import List, Tuple
+from typing import Tuple
 
 from super_scad.scad.Unit import Unit
 from super_scad.type.Point2 import Point2
+
+from super_scad_thread.ThreadAnatomy import ThreadAnatomy
 from super_scad_thread.ThreadProfileCreator import ThreadProfileCreator
 
 
@@ -57,7 +59,7 @@ class TestThreadProfileCreator(ThreadProfileCreator):
         return self.__nominal_diameter
 
     # ------------------------------------------------------------------------------------------------------------------
-    def create_master_profile(self) -> List[Point2] | Tuple[Point2, ...]:
+    def create_master_profile(self) -> Tuple[Tuple[ThreadAnatomy, Point2], ...]:
         """
         Returns the thread profile points.
         """
@@ -77,6 +79,9 @@ class TestThreadProfileCreator(ThreadProfileCreator):
         y += step
         p4 = Point2(minor_radius, y)
 
-        return p1, p2, p3, p4
+        return (ThreadAnatomy.AT_MINOR, p1), \
+            (ThreadAnatomy.AT_MAJOR, p2), \
+            (ThreadAnatomy.AT_MAJOR, p3), \
+            (ThreadAnatomy.AT_MINOR, p4)
 
 # ----------------------------------------------------------------------------------------------------------------------
