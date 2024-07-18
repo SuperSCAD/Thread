@@ -2,6 +2,7 @@ from super_scad.scad.Scad import Scad
 from super_scad.scad.Unit import Unit
 
 from super_scad_thread.ExternalThread import ExternalThread
+from super_scad_thread.lead_thread.external.NoneExternalThreadLeadCreator import NoneExternalThreadLeadCreator
 from super_scad_thread.lead_thread.external.ScaleInExternalThreadLeadCreator import ScaleInExternalThreadLeadCreator
 from super_scad_thread.ThreadDirection import ThreadDirection
 from test.ScadTestCase import ScadTestCase
@@ -12,6 +13,40 @@ class ExternalThreadTest(ScadTestCase):
     """
     Testcases for external threads.
     """
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def testPlainRightThreadNoLead(self):
+        """
+        Plain right-handed and not centered thread without a lead.
+        """
+        path_actual, path_expected = self.paths()
+        scad = Scad(unit_length_final=Unit.MM)
+
+        thread_profile_creator = TestThreadProfileCreator(nominal_diameter=6.0, pitch=1.0)
+        pitch = thread_profile_creator.pitch
+        minor_diameter = thread_profile_creator.minor_diameter
+        top_thread_lead_creator = NoneExternalThreadLeadCreator(pitch, minor_diameter)
+        bottom_thread_lead_creator = NoneExternalThreadLeadCreator(pitch, minor_diameter)
+
+        thread = ExternalThread(length=15.0,
+                                thread_profile_creator=thread_profile_creator,
+                                top_thread_lead_creator=top_thread_lead_creator,
+                                bottom_thread_lead_creator=bottom_thread_lead_creator)
+
+        self.assertAlmostEqual(1.0, thread_profile_creator.pitch)
+        self.assertAlmostEqual(6.0, thread_profile_creator.major_diameter)
+        self.assertAlmostEqual(4.917468245269451, thread_profile_creator.minor_diameter)
+
+        self.assertFalse(thread.center)
+        self.assertAlmostEqual(15.0, thread.length)
+        self.assertEqual(ThreadDirection.RIGHT, thread.direction)
+        self.assertIsNone(thread.inner_diameter)
+        self.assertIsNone(thread.inner_radius)
+
+        scad.run_super_scad(thread, path_actual)
+        actual = path_actual.read_text()
+        expected = path_expected.read_text()
+        self.assertEqual(expected, actual)
 
     # ------------------------------------------------------------------------------------------------------------------
     def testPlainRightThread(self):
