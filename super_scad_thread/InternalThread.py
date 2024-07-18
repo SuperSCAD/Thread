@@ -4,10 +4,10 @@ from typing import List, Tuple
 from super_scad.scad.ArgumentAdmission import ArgumentAdmission
 from super_scad.type.Point3 import Point3
 
+from super_scad_thread.enum.ThreadDirection import ThreadDirection
 from super_scad_thread.lead_thread.internal.InternalThreadLeadCreator import InternalThreadLeadCreator
 from super_scad_thread.lead_thread.ThreadLeadCreator import ThreadLeadCreator
 from super_scad_thread.Thread import Thread
-from super_scad_thread.ThreadDirection import ThreadDirection
 from super_scad_thread.ThreadProfileCreator import ThreadProfileCreator
 
 

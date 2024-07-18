@@ -3,7 +3,7 @@ from typing import List
 
 from super_scad.type.Point2 import Point2
 
-from super_scad_thread.ThreadAnatomy import ThreadAnatomy
+from super_scad_thread.enum.ThreadAnatomy import ThreadAnatomy
 
 
 class ThreadLeadCreator(ABC):

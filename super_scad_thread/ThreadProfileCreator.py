@@ -4,7 +4,7 @@ from typing import List, Tuple
 from super_scad.scad.Unit import Unit
 from super_scad.type.Point2 import Point2
 
-from super_scad_thread.ThreadAnatomy import ThreadAnatomy
+from super_scad_thread.enum.ThreadAnatomy import ThreadAnatomy
 
 
 class ThreadProfileCreator(ABC):

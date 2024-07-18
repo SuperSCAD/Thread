@@ -4,7 +4,7 @@ from super_scad.scad.Unit import Unit
 from super_scad_thread.ExternalThread import ExternalThread
 from super_scad_thread.lead_thread.external.NoneExternalThreadLeadCreator import NoneExternalThreadLeadCreator
 from super_scad_thread.lead_thread.external.ScaleInExternalThreadLeadCreator import ScaleInExternalThreadLeadCreator
-from super_scad_thread.ThreadDirection import ThreadDirection
+from super_scad_thread.enum.ThreadDirection import ThreadDirection
 from test.ScadTestCase import ScadTestCase
 from test.TestThreadProfileCreator import TestThreadProfileCreator
 

@@ -2,8 +2,8 @@ from typing import List
 
 from super_scad.type.Point2 import Point2
 
+from super_scad_thread.enum.ThreadAnatomy import ThreadAnatomy
 from super_scad_thread.lead_thread.internal.InternalThreadLeadCreator import InternalThreadLeadCreator
-from super_scad_thread.ThreadAnatomy import ThreadAnatomy
 
 
 class NoneInternalThreadLeadCreator(InternalThreadLeadCreator):
