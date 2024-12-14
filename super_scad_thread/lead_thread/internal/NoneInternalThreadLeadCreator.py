@@ -1,6 +1,6 @@
 from typing import List
 
-from super_scad.type.Point2 import Point2
+from super_scad.type.Vector2 import Vector2
 
 from super_scad_thread.enum.ThreadAnatomy import ThreadAnatomy
 from super_scad_thread.lead_thread.internal.InternalThreadLeadCreator import InternalThreadLeadCreator
@@ -32,10 +32,10 @@ class NoneInternalThreadLeadCreator(InternalThreadLeadCreator):
 
     # ------------------------------------------------------------------------------------------------------------------
     def create_lead(self,
-                    thread_profile: List[Point2],
+                    thread_profile: List[Vector2],
                     thread_anatomy: List[ThreadAnatomy],
                     z: float,
-                    angle: float) -> List[Point2]:
+                    angle: float) -> List[Vector2]:
         """
         Creates a lead on a 2D thread profile.
 
@@ -49,7 +49,7 @@ class NoneInternalThreadLeadCreator(InternalThreadLeadCreator):
         """
         for index, point in enumerate(thread_profile):
             if point.y < 0.0:
-                thread_profile[index] = Point2(self.__major_diameter / 2.0, 0.0)
+                thread_profile[index] = Vector2(self.__major_diameter / 2.0, 0.0)
             else:
                 break
 

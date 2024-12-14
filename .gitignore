@@ -14,5 +14,4 @@
 /test/**/*.actual.scad
 /test/coverage.xml
 /test/html/
-/thread.sqlite
 /vendor/

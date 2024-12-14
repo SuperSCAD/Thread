@@ -1,7 +1,7 @@
 from abc import ABC
 from typing import List
 
-from super_scad.type.Point2 import Point2
+from super_scad.type.Vector2 import Vector2
 
 from super_scad_thread.enum.ThreadAnatomy import ThreadAnatomy
 
@@ -13,10 +13,10 @@ class ThreadLeadCreator(ABC):
 
     # ------------------------------------------------------------------------------------------------------------------
     def create_lead(self,
-                    thread_profile: List[Point2],
+                    thread_profile: List[Vector2],
                     thread_anatomy: List[ThreadAnatomy],
                     z: float,
-                    angle: float) -> List[Point2]:
+                    angle: float) -> List[Vector2]:
         """
         Creates a lead thread on a 2D thread profile.
 

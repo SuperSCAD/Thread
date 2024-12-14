@@ -1,12 +1,11 @@
 import math
-from typing import List, Tuple
+from typing import Any, Dict, List, Tuple
 
-from super_scad.scad.ArgumentAdmission import ArgumentAdmission
-from super_scad.type.Point3 import Point3
+from super_scad.scad.ArgumentValidator import ArgumentValidator
+from super_scad.type import Vector3
 
 from super_scad_thread.enum.ThreadDirection import ThreadDirection
 from super_scad_thread.lead_thread.external.ExternalThreadLeadCreator import ExternalThreadLeadCreator
-from super_scad_thread.lead_thread.ThreadLeadCreator import ThreadLeadCreator
 from super_scad_thread.Thread import Thread
 from super_scad_thread.ThreadProfileCreator import ThreadProfileCreator
 
@@ -21,12 +20,12 @@ class ExternalThread(Thread):
                  *,
                  length: float,
                  thread_profile_creator: ThreadProfileCreator,
-                 top_thread_lead_creator: ThreadLeadCreator,
-                 bottom_thread_lead_creator: ThreadLeadCreator,
-                 direction: ThreadDirection = ThreadDirection.RIGHT,
+                 top_thread_lead_creator: ExternalThreadLeadCreator,
+                 bottom_thread_lead_creator: ExternalThreadLeadCreator,
+                 direction: ThreadDirection,
                  inner_radius: float | None = None,
                  inner_diameter: float | None = None,
-                 center: bool | None = None,
+                 center: bool = False,
                  convexity: int = 2):
         """
         Object contructor.
@@ -36,24 +35,43 @@ class ExternalThread(Thread):
         :param top_thread_lead_creator: The object for creating a lead on the top of the thread.
         :param bottom_thread_lead_creator: The object for creating a lead on the top of the thread.
         :param direction: The direction of the thread.
+        :param inner_radius: For a hollow external thread, the outer radius of the thread.
+        :param inner_diameter: For a hollow external thread, the outer diameter of the thread.
         :param center: Whether to center the thread along the z-axis.
-        :param convexity: The convexity of the thread. Normally 2 is enough, however, in some cases a higher value is
+        :param convexity: The convexity of the thread. Normally 2 is enough, however, in some cases, a higher value is
                           required.
         """
-        Thread.__init__(self, args=locals())
+        Thread.__init__(self,
+                        length=length,
+                        thread_profile_creator=thread_profile_creator,
+                        top_thread_lead_creator=top_thread_lead_creator,
+                        bottom_thread_lead_creator=bottom_thread_lead_creator,
+                        direction=direction,
+                        center=center,
+                        convexity=convexity)
+
+        self._inner_radius: float | None = inner_radius
+        """
+        For a hollow external thread, the outer radius of the thread.
+        """
+
+        self._inner_diameter: float | None = inner_diameter
+        """
+        For a hollow external thread, the outer diameter of the thread.
+        """
+
+        self.__validate_arguments(locals())
 
     # ------------------------------------------------------------------------------------------------------------------
-    def _validate_arguments(self) -> None:
+    @staticmethod
+    def __validate_arguments(args: Dict[str, Any]) -> None:
         """
         Validates the arguments supplied to the constructor of this SuperSCAD widget.
+
+        :param args: The arguments supplied to the constructor.
         """
-        Thread._validate_arguments(self)
-
-        admission = ArgumentAdmission(self._args)
-        admission.validate_exclusive({'inner_radius'}, {'inner_diameter'})
-
-        assert isinstance(self.top_thread_lead_creator, ExternalThreadLeadCreator)
-        assert isinstance(self.bottom_thread_lead_creator, ExternalThreadLeadCreator)
+        validator = ArgumentValidator(args)
+        validator.validate_exclusive({'inner_radius'}, {'inner_diameter'})
 
     # ------------------------------------------------------------------------------------------------------------------
     @property
@@ -61,11 +79,11 @@ class ExternalThread(Thread):
         """
         Returns the internal radius of the external thread. 
         """
-        if 'inner_radius' in self._args:
-            return self.uc(self._args['inner_radius'])
+        if self._inner_radius is not None:
+            return self._inner_radius
 
-        if 'inner_diameter' in self._args:
-            return self.uc(self._args['inner_diameter'] / 2.0)
+        if self._inner_diameter is not None:
+            return 0.5 * self._inner_diameter
 
         return None
 
@@ -75,21 +93,21 @@ class ExternalThread(Thread):
         """
         Returns the internal diameter of the external thread. 
         """
-        if 'inner_radius' in self._args:
-            return self.uc(2.0 * self._args['inner_radius'])
+        if self._inner_diameter is not None:
+            return self._inner_diameter
 
-        if 'inner_diameter' in self._args:
-            return self.uc(self._args['inner_diameter'])
+        if self._inner_radius is not None:
+            return 2.0 * self._inner_radius
 
         return None
 
     # ------------------------------------------------------------------------------------------------------------------
     def __create_faces_end_solid(self,
-                                 faces: List[List[Point3] | Tuple[Point3, ...]],
-                                 thread_3d: List[List[Point3]]) -> None:
+                                 faces: List[List[Vector3] | Tuple[Vector3, ...]],
+                                 thread_3d: List[List[Vector3]]) -> None:
         """
         Creates faces for the top and bottom ends of the thread for a solid external thread.
-        
+
         :param faces: The list of faces.
         :param thread_3d: The thread profile in 3D.
         """
@@ -112,11 +130,11 @@ class ExternalThread(Thread):
 
     # ------------------------------------------------------------------------------------------------------------------
     def __create_faces_ends_hollow(self,
-                                   faces: List[List[Point3] | Tuple[Point3, ...]],
-                                   thread_3d: List[List[Point3]]) -> None:
+                                   faces: List[List[Vector3] | Tuple[Vector3, ...]],
+                                   thread_3d: List[List[Vector3]]) -> None:
         """
         Creates faces for the top and bottom ends of the thread for a hollow external thread.
-        
+
         :param faces: The list of faces.
         :param thread_3d: The thread profile in 3D.
         """
@@ -129,8 +147,8 @@ class ExternalThread(Thread):
             angle = edge * 360.0 / edges
             x = inner_radius * math.cos(math.radians(angle))
             y = inner_radius * math.sin(math.radians(angle))
-            bottom_points.append(Point3(x, y, 0.0))
-            top_points.append(Point3(x, y, self.length))
+            bottom_points.append(Vector3(x, y, 0.0))
+            top_points.append(Vector3(x, y, self.length))
 
         # Add bottom face.
         for edge in range(1, edges):
@@ -167,11 +185,11 @@ class ExternalThread(Thread):
 
     # ------------------------------------------------------------------------------------------------------------------
     def __create_faces_thread(self,
-                              faces: List[List[Point3] | Tuple[Point3, ...]],
-                              thread_3d: List[List[Point3]]) -> None:
+                              faces: List[List[Vector3] | Tuple[Vector3, ...]],
+                              thread_3d: List[List[Vector3]]) -> None:
         """
         Creates the faces for the thread profile.
-        
+
         :param faces: The list of faces.
         :param thread_3d: The thread profile in 3D.
         """
@@ -194,13 +212,13 @@ class ExternalThread(Thread):
                           thread_3d[0][key + number_of_points_per_pitch - 1]))
 
     # ------------------------------------------------------------------------------------------------------------------
-    def _create_faces(self, thread_3d: List[List[Point3]]) -> List[List[Point3] | Tuple[Point3, ...]]:
+    def _create_faces(self, thread_3d: List[List[Vector3]]) -> List[List[Vector3] | Tuple[Vector3, ...]]:
         """
         Creates faces given a thread profile in 3D.
 
         :param thread_3d: The thread profile in 3D.
         """
-        faces: List[List[Point3] | Tuple[Point3, ...]] = []
+        faces: List[List[Vector3] | Tuple[Vector3, ...]] = []
 
         self.__create_faces_thread(faces, thread_3d)
         if self.inner_radius is None:

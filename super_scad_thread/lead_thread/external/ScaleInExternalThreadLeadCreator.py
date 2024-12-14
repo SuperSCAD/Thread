@@ -1,6 +1,6 @@
 from typing import List
 
-from super_scad.type.Point2 import Point2
+from super_scad.type.Vector2 import Vector2
 
 from super_scad_thread.enum.ThreadAnatomy import ThreadAnatomy
 from super_scad_thread.lead_thread.external.ExternalThreadLeadCreator import ExternalThreadLeadCreator
@@ -23,7 +23,7 @@ class ScaleInExternalThreadLeadCreator(ExternalThreadLeadCreator):
         :param pitch: The pitch of the thread.
         :param minor_diameter: The minor diameter of the thread.
         :param major_diameter: The major diameter of the thread.
-        :param start_angle: The angle at which the thread start to appear.
+        :param start_angle: The angle at which the thread starts to appear.
         """
 
         self.__pitch: float = pitch
@@ -48,10 +48,10 @@ class ScaleInExternalThreadLeadCreator(ExternalThreadLeadCreator):
 
     # ------------------------------------------------------------------------------------------------------------------
     def create_lead(self,
-                    thread_profile: List[Point2],
+                    thread_profile: List[Vector2],
                     thread_anatomy: List[ThreadAnatomy],
                     z: float,
-                    angle: float) -> List[Point2]:
+                    angle: float) -> List[Vector2]:
         """
         Creates a lead on a 2D thread profile.
 
@@ -65,18 +65,18 @@ class ScaleInExternalThreadLeadCreator(ExternalThreadLeadCreator):
         """
         for index, point in enumerate(thread_profile):
             if point.y < 0.0:
-                thread_profile[index] = Point2(self.__minor_diameter / 2.0, 0.0)
+                thread_profile[index] = Vector2(self.__minor_diameter / 2.0, 0.0)
             elif point.y <= z:
                 if angle >= self.__start_angle:
                     fraction = (angle - self.__start_angle) / (360.0 - self.__start_angle)
                     d_max = self.__minor_diameter + (self.__major_diameter - self.__minor_diameter) * fraction
                     x = min(d_max / 2.0, point.x)
                     y = point.y
-                    thread_profile[index] = Point2(x, y)
+                    thread_profile[index] = Vector2(x, y)
                 else:
                     x = self.__minor_diameter / 2.0
                     y = point.y
-                    thread_profile[index] = Point2(x, y)
+                    thread_profile[index] = Vector2(x, y)
             else:
                 break
 
